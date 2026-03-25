@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Administración · SMCI</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --magenta:#C0006A;--magenta-dk:#8A0050;
+  --dark:#1A1712;--mid:#3D3830;--muted:#8C8070;
+  --cream:#F5F0E8;--surface:#EFEAD8;--border:rgba(60,50,35,0.15);
+  --green:#2C5F3F;--green-bg:#E8F2EC;--red-bg:#FFF0F5;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;}
+
+.app{max-width:640px;margin:0 auto;padding:2rem 1.25rem 4rem;}
+
+/* Header */
+.app-header{text-align:center;padding:2rem 0 1.5rem;border-bottom:1px solid var(--border);margin-bottom:0;}
+.app-header .eyebrow{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+.app-header h1{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:400;}
+.app-header h1 em{font-style:italic;color:var(--magenta);}
+.app-header p{font-size:13px;color:var(--muted);margin-top:0.35rem;font-weight:300;}
+.nav-links{font-size:11px;color:var(--muted);margin-top:0.75rem;}
+.nav-links a{color:var(--magenta);text-decoration:none;font-weight:500;}
+.nav-links a:hover{text-decoration:underline;}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:1.75rem;margin-top:1.5rem;}
+.tab-btn{flex:1;padding:0.85rem;font-size:13px;font-weight:500;color:var(--muted);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.tab-btn:hover{color:var(--dark);}
+.tab-btn.active{color:var(--magenta);border-bottom:2px solid var(--magenta);}
+
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* Cards */
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem;}
+.card-title{font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--mid);margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border);}
+
+/* Fields */
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px;}
+.field input[type=text],.field select,.field input[type=date]{
+  width:100%;padding:10px 14px;border:1px solid var(--border);
+  border-radius:8px;font-size:14px;color:var(--dark);
+  background:#FAFAF8;font-family:'DM Sans',sans-serif;transition:border 0.15s;
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--magenta);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* Firma upload */
+.firma-zone{border:2px dashed var(--border);border-radius:10px;padding:1.25rem;text-align:center;cursor:pointer;background:#FAFAF8;position:relative;transition:all 0.15s;}
+.firma-zone:hover{border-color:var(--magenta);background:#FFF5FA;}
+.firma-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.firma-zone .fz-icon{font-size:24px;margin-bottom:0.4rem;display:block;}
+.firma-zone .fz-text{font-size:13px;color:var(--muted);}
+.firma-zone .fz-hint{font-size:11px;color:var(--muted);opacity:0.7;margin-top:2px;}
+.firma-preview{display:none;margin-top:0.75rem;text-align:center;}
+.firma-preview img{max-height:52px;max-width:200px;object-fit:contain;border:1px solid var(--border);border-radius:5px;padding:5px;background:#fff;}
+.firma-preview .fp-ok{font-size:11px;color:var(--green);margin-top:4px;font-weight:500;}
+.firma-preview .fp-change{font-size:11px;color:var(--magenta);cursor:pointer;margin-top:2px;display:inline-block;}
+
+/* Botones */
+.btn-primary{width:100%;padding:11px;background:var(--magenta);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;}
+.btn-primary:hover:not(:disabled){background:var(--magenta-dk);}
+.btn-primary:disabled{opacity:0.35;cursor:default;}
+
+/* Mensajes */
+.msg{border-radius:8px;padding:10px 14px;font-size:13px;margin-top:0.75rem;display:none;}
+.msg.ok{background:var(--green-bg);color:var(--green);border:1px solid rgba(44,95,63,0.2);display:block;}
+.msg.err{background:var(--red-bg);color:var(--magenta-dk);border:1px solid rgba(192,0,106,0.15);display:block;}
+
+/* Lista items */
+.item-list{margin-top:0;}
+.item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+.item:last-child{border-bottom:none;}
+.item-icon{width:44px;height:28px;object-fit:contain;border:1px solid var(--border);border-radius:4px;padding:3px;background:#fff;flex-shrink:0;}
+.item-icon-placeholder{width:44px;height:28px;background:var(--surface);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.item-info{flex:1;min-width:0;}
+.item-nombre{font-size:13.5px;font-weight:500;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-meta{font-size:11px;color:var(--muted);margin-top:1px;}
+.item-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;margin-right:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.badge-seminario{background:#EDE8F5;color:#4A3B8A;}
+.badge-curso{background:#E8F0FD;color:#1A4A8A;}
+.badge-taller{background:#FDF3E8;color:#8A4A1A;}
+.badge-diplomado{background:#E8F5EE;color:#1A6A3A;}
+.badge-certificacion{background:#FDE8F0;color:#8A1A4A;}
+.btn-del{font-size:11px;padding:5px 9px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid rgba(192,0,106,0.2);background:transparent;color:var(--magenta);flex-shrink:0;transition:all 0.12s;}
+.btn-del:hover{background:var(--red-bg);}
+
+.empty-state{text-align:center;padding:1.75rem 0;color:var(--muted);font-size:13px;}
+.empty-state span{font-size:28px;display:block;margin-bottom:0.4rem;}
+
+/* Tipos color */
+.tipo-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="app-header">
+    <p class="eyebrow">SMCI · Sistema de Constancias</p>
+    <h1>Panel de <em>Administración</em></h1>
+    <p>Gestiona ponentes y programas académicos de SMCI.</p>
+    <p class="nav-links">
+      <a href="index.html">← Ir al examen</a>
+      &nbsp;·&nbsp;
+      <a href="constancia.html">Generar constancia</a>
+    </p>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('ponentes')">👤 Ponentes</button>
+    <button class="tab-btn" onclick="switchTab('programas')">📚 Programas académicos</button>
+    <button class="tab-btn" onclick="switchTab('folios')">📋 Generar folios</button>
+  </div>
+
+  <!-- ══ TAB: PONENTES ══ -->
+  <div class="tab-panel active" id="tab-ponentes">
+
+    <div class="card">
+      <div class="card-title">Agregar ponente</div>
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" id="p-nombre" placeholder="Ej. Verónica Martínez López" oninput="checkPonente()">
+      </div>
+      <div class="field">
+        <label>Firma (JPG, PNG)</label>
+        <div id="p-firma-zone" style="border:2px dashed var(--border);border-radius:10px;padding:1.25rem;text-align:center;background:#FAFAF8;">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:0.75rem;">Selecciona la imagen de tu firma</div>
+          <label for="p-firma-file" style="display:inline-block;padding:9px 20px;background:var(--magenta);color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+            Elegir imagen
+          </label>
+          <input type="file" id="p-firma-file" accept="image/*" onchange="previewFirma(this)" style="display:none;">
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">JPG o PNG · Fondo blanco recomendado</div>
+        </div>
+        <div class="firma-preview" id="p-firma-preview">
+          <img id="p-firma-img" src="" alt="Firma">
+          <div class="fp-ok">Firma cargada correctamente</div>
+          <span class="fp-change" onclick="cambiarFirma()">Cambiar firma</span>
+        </div>
+      </div>
+      <button class="btn-primary" id="p-btn" disabled onclick="registrarPonente()">Registrar ponente</button>
+      <div class="msg" id="p-msg"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Ponentes registrados</div>
+      <div id="p-lista"><div class="empty-state">Sin ponentes registrados aún.</div></div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: FOLIOS ══ -->
+  <div class="tab-panel" id="tab-folios">
+
+    <div class="card">
+      <div class="card-title">Generar folios por programa</div>
+
+      <div class="field">
+        <label>Selecciona el programa académico</label>
+        <select id="f-programa" onchange="checkFolios()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--dark);background:#FAFAF8;font-family:'DM Sans',sans-serif;">
+          <option value="">Selecciona un programa...</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Lista de estudiantes (archivo .txt · un nombre por línea)</label>
+        <div class="firma-zone" id="f-lista-zone" style="padding:1rem;">
+          <input type="file" id="f-lista-file" accept=".txt,text/plain" onchange="leerLista(this)">
+          <span class="fz-icon">📄</span>
+          <div class="fz-text">Toca para subir el archivo .txt</div>
+          <div class="fz-hint">Un nombre por línea · UTF-8</div>
+        </div>
+        <div id="f-lista-preview" style="display:none;margin-top:0.75rem;background:var(--surface);border-radius:8px;padding:10px 14px;">
+          <div style="font-size:12px;font-weight:600;color:var(--mid);margin-bottom:6px;" id="f-lista-count"></div>
+          <div id="f-lista-nombres" style="font-size:12px;color:var(--muted);max-height:120px;overflow-y:auto;line-height:1.8;"></div>
+          <span style="font-size:11px;color:var(--magenta);cursor:pointer;margin-top:4px;display:inline-block;" onclick="cambiarLista()">Cambiar archivo</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="f-btn" disabled onclick="generarFolios()" style="margin-top:0.25rem;">
+        Generar folios
+      </button>
+      <div class="msg" id="f-msg"></div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card" id="f-resultados-card" style="display:none;">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Folios generados</span>
+        <div style="display:flex;gap:8px;">
+          <button onclick="copiarTodos()" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--mid);">Copiar todos</button>
+          <button onclick="descargarTxt()" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--magenta);background:var(--magenta);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;">Descargar .txt</button>
+        </div>
+      </div>
+      <div id="f-resultados-lista"></div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: PROGRAMAS ══ -->
+  <div class="tab-panel" id="tab-programas">
+
+    <div class="card">
+      <div class="card-title">Agregar programa académico</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Tipo de programa</label>
+          <select id="prog-tipo" onchange="checkPrograma()">
+            <option value="">Selecciona...</option>
+            <option value="seminario">Seminario</option>
+            <option value="curso">Curso</option>
+            <option value="taller">Taller</option>
+            <option value="diplomado">Diplomado</option>
+            <option value="certificacion">Certificación</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ponente responsable</label>
+          <select id="prog-ponente" onchange="checkPrograma()">
+            <option value="">Selecciona...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Nombre del programa</label>
+        <input type="text" id="prog-nombre" placeholder="Ej. Técnicas en Psicoterapia de Pareja" oninput="checkPrograma()">
+      </div>
+
+      <div class="field">
+        <label>Fechas de realización</label>
+        <input type="text" id="prog-fechas" placeholder="Ej. 17 y 24 de febrero, 3, 10 y 17 de marzo de 2026" oninput="checkPrograma()">
+      </div>
+
+      <div class="field">
+        <label>Duración total</label>
+        <input type="text" id="prog-duracion" placeholder="Ej. 20 horas · 5 sesiones de 2 horas" oninput="checkPrograma()">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Fecha inicio</label>
+          <input type="date" id="prog-inicio" oninput="checkPrograma()">
+        </div>
+        <div class="field">
+          <label>Fecha fin</label>
+          <input type="date" id="prog-fin" oninput="checkPrograma()">
+        </div>
+      </div>
+
+      <button class="btn-primary" id="prog-btn" disabled onclick="registrarPrograma()">Agregar programa</button>
+      <div class="msg" id="prog-msg"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Programas registrados</div>
+      <div id="prog-lista"><div class="empty-state"><span>📚</span>Cargando...</div></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+var firmaBase64 = null;
+
+// ── TABS ──
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(function(b,i){
+    b.classList.toggle('active',
+      (i===0&&tab==='ponentes')||(i===1&&tab==='programas')||(i===2&&tab==='folios'));
+  });
+  document.getElementById('tab-ponentes').classList.toggle('active', tab==='ponentes');
+  document.getElementById('tab-programas').classList.toggle('active', tab==='programas');
+  document.getElementById('tab-folios').classList.toggle('active', tab==='folios');
+  if(tab==='programas') cargarPonentesEnSelect();
+  if(tab==='folios') cargarProgramasEnSelect();
+}
+
+// ── FIRMA ──
+function previewFirma(input){
+  if(!input.files||!input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    firmaBase64 = e.target.result;
+    document.getElementById('p-firma-img').src = firmaBase64;
+    document.getElementById('p-firma-preview').style.display = 'block';
+    document.getElementById('p-firma-zone').style.display = 'none';
+    checkPonente();
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+function cambiarFirma(){
+  firmaBase64 = null;
+  document.getElementById('p-firma-preview').style.display = 'none';
+  document.getElementById('p-firma-zone').style.display = 'block';
+  document.getElementById('p-firma-file').value = '';
+  checkPonente();
+}
+
+// ── PONENTES ──
+function checkPonente(){
+  var n = document.getElementById('p-nombre').value.trim();
+  document.getElementById('p-btn').disabled = !(n.length>=3 && firmaBase64);
+}
+
+function cargarPonentes(){
+  try { return JSON.parse(localStorage.getItem('smci_ponentes')||'[]'); }
+  catch(e){ return []; }
+}
+
+function guardarPonentes(lista){
+  localStorage.setItem('smci_ponentes', JSON.stringify(lista));
+}
+
+function registrarPonente(){
+  var nombre = document.getElementById('p-nombre').value.trim();
+  if(!nombre||!firmaBase64) return;
+  document.getElementById('p-btn').disabled = true;
+  document.getElementById('p-btn').textContent = 'Guardando...';
+
+  var lista = cargarPonentes();
+  if(lista.find(function(p){ return p.nombre.toLowerCase()===nombre.toLowerCase(); })){
+    mostrarMsg('p-msg','Ya existe un ponente con ese nombre.','err');
+    document.getElementById('p-btn').disabled = false;
+    document.getElementById('p-btn').textContent = 'Registrar ponente';
+    return;
+  }
+  var ts = Date.now().toString(36).toUpperCase();
+  var id = 'PON-'+nombre.replace(/\s+/g,'').toUpperCase().substring(0,4)+'-'+ts.substring(ts.length-5);
+  lista.push({id:id, nombre:nombre, firma:firmaBase64, fecha:new Date().toISOString()});
+  guardarPonentes(lista);
+  mostrarMsg('p-msg','Ponente registrado. ID: '+id,'ok');
+  document.getElementById('p-nombre').value = '';
+  cambiarFirma();
+  document.getElementById('p-btn').disabled = false;
+  document.getElementById('p-btn').textContent = 'Registrar ponente';
+  renderPonentes(lista);
+}
+
+function eliminarPonente(id){
+  if(!confirm('¿Eliminar este ponente?')) return;
+  var lista = cargarPonentes().filter(function(p){ return p.id!==id; });
+  guardarPonentes(lista);
+  renderPonentes(lista);
+  mostrarMsg('p-msg','Ponente eliminado.','ok');
+}
+
+function renderPonentes(lista){
+  var el = document.getElementById('p-lista');
+  if(!lista||!lista.length){
+    el.innerHTML='<div class="empty-state">Sin ponentes registrados aún.</div>';
+    return;
+  }
+  el.innerHTML = lista.map(function(p){
+    return '<div class="item">'+
+      (p.firma?'<img class="item-icon" src="'+p.firma+'" alt="Firma">':'<div class="item-icon-placeholder">✍️</div>')+
+      '<div class="item-info">'+
+        '<div class="item-nombre">'+p.nombre+'</div>'+
+        '<div class="item-meta">'+p.id+'</div>'+
+      '</div>'+
+      '<button class="btn-del" onclick="eliminarPonente(\''+p.id+'\')">Eliminar</button>'+
+    '</div>';
+  }).join('');
+}
+
+// ── PROGRAMAS ──
+var TIPOS_COLOR = {
+  seminario:'badge-seminario', curso:'badge-curso',
+  taller:'badge-taller', diplomado:'badge-diplomado', certificacion:'badge-certificacion'
+};
+var TIPOS_LABEL = {
+  seminario:'Seminario', curso:'Curso', taller:'Taller',
+  diplomado:'Diplomado', certificacion:'Certificación'
+};
+
+function checkPrograma(){
+  var tipo = document.getElementById('prog-tipo').value;
+  var nombre = document.getElementById('prog-nombre').value.trim();
+  var ponente = document.getElementById('prog-ponente').value;
+  var fechas = document.getElementById('prog-fechas').value.trim();
+  document.getElementById('prog-btn').disabled = !(tipo&&nombre.length>=3&&ponente&&fechas.length>=3);
+}
+
+function cargarProgramas(){
+  try { return JSON.parse(localStorage.getItem('smci_programas')||'[]'); }
+  catch(e){ return []; }
+}
+
+function guardarProgramas(lista){
+  localStorage.setItem('smci_programas', JSON.stringify(lista));
+}
+
+function cargarPonentesEnSelect(){
+  var ponentes = cargarPonentes();
+  var sel = document.getElementById('prog-ponente');
+  if(ponentes.length===0){
+    sel.innerHTML='<option value="">No hay ponentes registrados</option>';
+    return;
+  }
+  sel.innerHTML='<option value="">Selecciona ponente...</option>'+
+    ponentes.map(function(p){
+      return '<option value="'+p.id+'">'+p.nombre+'</option>';
+    }).join('');
+}
+
+function registrarPrograma(){
+  var tipo = document.getElementById('prog-tipo').value;
+  var nombre = document.getElementById('prog-nombre').value.trim();
+  var ponenteId = document.getElementById('prog-ponente').value;
+  var fechas = document.getElementById('prog-fechas').value.trim();
+  var inicio = document.getElementById('prog-inicio').value;
+  var fin = document.getElementById('prog-fin').value;
+
+  if(!tipo||!nombre||!ponenteId||!fechas) return;
+  document.getElementById('prog-btn').disabled = true;
+  document.getElementById('prog-btn').textContent = 'Guardando...';
+
+  var ponentes = cargarPonentes();
+  var ponente = ponentes.find(function(p){ return p.id===ponenteId; });
+  var ts = Date.now().toString(36).toUpperCase();
+  var id = 'PROG-'+tipo.substring(0,3).toUpperCase()+'-'+ts.substring(ts.length-5);
+
+  var lista = cargarProgramas();
+  lista.push({
+    id:id, tipo:tipo, nombre:nombre,
+    ponenteId:ponenteId, ponenteNombre: ponente?ponente.nombre:'',
+    fechas:fechas, duracion:document.getElementById('prog-duracion').value.trim(), inicio:inicio, fin:fin,
+    fecha:new Date().toISOString()
+  });
+  guardarProgramas(lista);
+  mostrarMsg('prog-msg','Programa registrado. ID: '+id,'ok');
+
+  // Limpiar
+  document.getElementById('prog-tipo').value='';
+  document.getElementById('prog-nombre').value='';
+  document.getElementById('prog-ponente').value='';
+  document.getElementById('prog-fechas').value='';
+  document.getElementById('prog-duracion').value='';
+  document.getElementById('prog-inicio').value='';
+  document.getElementById('prog-fin').value='';
+  document.getElementById('prog-btn').disabled=false;
+  document.getElementById('prog-btn').textContent='Agregar programa';
+  checkPrograma();
+  renderProgramas(lista);
+}
+
+function eliminarPrograma(id){
+  if(!confirm('¿Eliminar este programa?')) return;
+  var lista = cargarProgramas().filter(function(p){ return p.id!==id; });
+  guardarProgramas(lista);
+  renderProgramas(lista);
+  mostrarMsg('prog-msg','Programa eliminado.','ok');
+}
+
+function renderProgramas(lista){
+  var el = document.getElementById('prog-lista');
+  if(!lista||!lista.length){
+    el.innerHTML='<div class="empty-state">Sin programas registrados aún.</div>';
+    return;
+  }
+  // Agrupar por tipo
+  var tipos = ['seminario','curso','taller','diplomado','certificacion'];
+  var html = '';
+  tipos.forEach(function(tipo){
+    var items = lista.filter(function(p){ return p.tipo===tipo; });
+    if(!items.length) return;
+    items.forEach(function(p){
+      html += '<div class="item">'+
+        '<div class="item-icon-placeholder" style="font-size:18px;">'+
+          (tipo==='seminario'?'🎓':tipo==='curso'?'📖':tipo==='taller'?'🛠':tipo==='diplomado'?'🏛':'🏆')+
+        '</div>'+
+        '<div class="item-info">'+
+          '<div class="item-nombre">'+
+            '<span class="item-badge '+( TIPOS_COLOR[tipo]||'')+'">'+(TIPOS_LABEL[tipo]||tipo)+'</span>'+
+            p.nombre+
+          '</div>'+
+          '<div class="item-meta">'+p.ponenteNombre+' · '+p.fechas.substring(0,40)+(p.fechas.length>40?'…':'')+'</div>'+
+          '<div class="item-meta" style="font-family:monospace;font-size:10px;opacity:0.6;">'+p.id+'</div>'+
+        '</div>'+
+        '<button class="btn-del" onclick="eliminarPrograma(\''+p.id+'\')">Eliminar</button>'+
+      '</div>';
+    });
+  });
+  el.innerHTML = html;
+}
+
+// ── MENSAJES ──
+function mostrarMsg(id, texto, tipo){
+  var el = document.getElementById(id);
+  el.textContent = texto;
+  el.className = 'msg '+tipo;
+  setTimeout(function(){ el.className='msg'; }, 5000);
+}
+
+// ── FOLIOS ──
+var nombresLista = [];
+var foliosGenerados = [];
+
+function cargarProgramasEnSelect(){
+  var programas = cargarProgramas();
+  var sel = document.getElementById('f-programa');
+  if(!programas.length){
+    sel.innerHTML = '<option value="">No hay programas registrados</option>';
+    return;
+  }
+  var TIPOS_LABEL2 = {seminario:'Seminario',curso:'Curso',taller:'Taller',diplomado:'Diplomado',certificacion:'Certificación'};
+  sel.innerHTML = '<option value="">Selecciona un programa...</option>' +
+    programas.map(function(p){
+      return '<option value="'+p.id+'">['+( TIPOS_LABEL2[p.tipo]||p.tipo)+'] '+p.nombre+' — '+p.ponenteNombre+'</option>';
+    }).join('');
+  checkFolios();
+}
+
+function leerLista(input){
+  if(!input.files||!input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var lineas = e.target.result.split(/
+?
+/).map(function(l){ return l.trim(); }).filter(function(l){ return l.length>0; });
+    nombresLista = lineas;
+    document.getElementById('f-lista-zone').style.display = 'none';
+    document.getElementById('f-lista-preview').style.display = 'block';
+    document.getElementById('f-lista-count').textContent = lineas.length + ' estudiante' + (lineas.length!==1?'s':'') + ' encontrado' + (lineas.length!==1?'s':'');
+    document.getElementById('f-lista-nombres').innerHTML = lineas.map(function(n,i){
+      return '<span style="display:block;">'+( i+1)+'. '+n+'</span>';
+    }).join('');
+    checkFolios();
+  };
+  reader.readAsText(input.files[0], 'UTF-8');
+}
+
+function cambiarLista(){
+  nombresLista = [];
+  document.getElementById('f-lista-preview').style.display = 'none';
+  document.getElementById('f-lista-zone').style.display = 'block';
+  document.getElementById('f-lista-file').value = '';
+  document.getElementById('f-resultados-card').style.display = 'none';
+  checkFolios();
+}
+
+function checkFolios(){
+  var prog = document.getElementById('f-programa').value;
+  document.getElementById('f-btn').disabled = !(prog && nombresLista.length > 0);
+}
+
+function generarFolios(){
+  var progId = document.getElementById('f-programa').value;
+  var programas = cargarProgramas();
+  var prog = programas.find(function(p){ return p.id===progId; });
+  if(!prog||!nombresLista.length) return;
+
+  // Fecha de hoy para el folio
+  var hoy = new Date();
+  var fechaNum = hoy.getFullYear().toString() +
+    String(hoy.getMonth()+1).padStart(2,'0') +
+    String(hoy.getDate()).padStart(2,'0');
+
+  foliosGenerados = nombresLista.map(function(nombre){
+    var iniciales = nombre.replace(/\s+/g,'').toUpperCase().substring(0,4);
+    var rand = Math.floor(Math.random()*9000+1000);
+    var folio = 'SMCI-'+iniciales+'-'+fechaNum+'-'+rand;
+
+    // Guardar en localStorage para que constancia.html lo encuentre
+    var folioData = {
+      folio: folio,
+      nombre: nombre,
+      curso: prog.nombre,
+      tipo: prog.tipo,
+      ponente: prog.ponenteNombre,
+      ponenteId: prog.ponenteId,
+      fechasPrograma: prog.fechas,
+      duracion: prog.duracion||'',
+      fecha: hoy.toISOString().split('T')[0],
+      fechaLegible: hoy.getDate()+' de '+['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][hoy.getMonth()]+' de '+hoy.getFullYear(),
+      ruta: 2
+    };
+    localStorage.setItem('smci_folio_'+folio, JSON.stringify(folioData));
+    return {nombre:nombre, folio:folio};
+  });
+
+  renderFolios();
+  mostrarMsg('f-msg', foliosGenerados.length+' folios generados y guardados correctamente.', 'ok');
+}
+
+function renderFolios(){
+  var card = document.getElementById('f-resultados-card');
+  var lista = document.getElementById('f-resultados-lista');
+  card.style.display = 'block';
+
+  lista.innerHTML = foliosGenerados.map(function(item, i){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">'+
+      '<div style="font-size:12px;color:var(--muted);min-width:24px;">'+(i+1)+'.</div>'+
+      '<div style="flex:1;">'+
+        '<div style="font-size:13.5px;font-weight:500;color:var(--dark);">'+item.nombre+'</div>'+
+        '<div style="font-family:monospace;font-size:11px;color:var(--muted);">'+item.folio+'</div>'+
+      '</div>'+
+      '<button onclick="copiarFolio(''+item.folio+'')" style="font-size:11px;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--mid);" id="copy-'+i+'">Copiar</button>'+
+    '</div>';
+  }).join('');
+}
+
+function copiarFolio(folio){
+  navigator.clipboard.writeText(folio).catch(function(){
+    var ta=document.createElement('textarea');ta.value=folio;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });
+}
+
+function copiarTodos(){
+  var texto = foliosGenerados.map(function(f){ return f.nombre+'	'+f.folio; }).join('
+');
+  navigator.clipboard.writeText(texto).catch(function(){
+    var ta=document.createElement('textarea');ta.value=texto;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });
+  mostrarMsg('f-msg','Lista copiada al portapapeles.','ok');
+}
+
+function descargarTxt(){
+  if(!foliosGenerados.length) return;
+  var prog = cargarProgramas().find(function(p){ return p.id===document.getElementById('f-programa').value; });
+  var cabecera = prog ? '# '+prog.nombre+' — Folios de participación
+# Generado: '+new Date().toLocaleDateString('es-MX')+'
+#
+' : '';
+  var contenido = cabecera + foliosGenerados.map(function(f){ return f.nombre+'	'+f.folio; }).join('
+');
+  var blob = new Blob([contenido],{type:'text/plain;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'folios-'+(prog?prog.nombre.substring(0,20).replace(/\s+/g,'-'):'smci')+'.txt';
+  a.click();
+}
+
+// ── INIT ──
+// Init
+checkPonente();
+try {
+  renderPonentes(cargarPonentes());
+} catch(e) {
+  document.getElementById('p-lista').innerHTML = '<p style="font-size:13px;color:var(--muted);padding:1rem 0;">Sin ponentes registrados.</p>';
+}
+try {
+  renderProgramas(cargarProgramas());
+} catch(e) {
+  document.getElementById('prog-lista').innerHTML = '<p style="font-size:13px;color:var(--muted);padding:1rem 0;">Sin programas registrados.</p>';
+}
+</script>
+</body>
+</html>
