@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Ponentes · SMCI</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --magenta:#C0006A;--magenta-dk:#8A0050;
+  --dark:#1A1712;--mid:#3D3830;--muted:#8C8070;
+  --cream:#F5F0E8;--surface:#EFEAD8;--border:rgba(60,50,35,0.15);
+  --green:#2C5F3F;--green-bg:#E8F2EC;
+  --red-bg:#FFF0F5;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;}
+
+.app{max-width:560px;margin:0 auto;padding:2rem 1.25rem 4rem;}
+
+/* Header */
+.app-header{text-align:center;padding:2rem 0 1.75rem;border-bottom:1px solid var(--border);margin-bottom:2rem;}
+.app-header .eyebrow{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem;}
+.app-header h1{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:400;}
+.app-header h1 em{font-style:italic;color:var(--magenta);}
+.app-header p{font-size:13px;color:var(--muted);margin-top:0.4rem;font-weight:300;}
+
+/* Formulario registro */
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem;}
+.card-title{font-size:13px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--mid);margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border);}
+
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px;}
+.field input[type=text]{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--dark);background:#FAFAF8;font-family:'DM Sans',sans-serif;transition:border 0.15s;}
+.field input[type=text]:focus{outline:none;border-color:var(--magenta);}
+
+/* Upload firma */
+.firma-zone{border:2px dashed var(--border);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.15s;background:#FAFAF8;position:relative;}
+.firma-zone:hover{border-color:var(--magenta);background:#FFF5FA;}
+.firma-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.firma-zone .fz-icon{font-size:28px;margin-bottom:0.5rem;display:block;}
+.firma-zone .fz-text{font-size:13px;color:var(--muted);}
+.firma-zone .fz-hint{font-size:11px;color:var(--muted);margin-top:3px;opacity:0.7;}
+.firma-preview{display:none;margin-top:1rem;text-align:center;}
+.firma-preview img{max-height:60px;max-width:220px;object-fit:contain;border:1px solid var(--border);border-radius:6px;padding:6px;background:#fff;}
+.firma-preview .fp-label{font-size:11px;color:var(--green);margin-top:5px;font-weight:500;}
+.firma-preview .fp-change{font-size:11px;color:var(--magenta);cursor:pointer;margin-top:2px;display:inline-block;}
+
+.btn-registrar{width:100%;padding:12px;background:var(--magenta);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;margin-top:0.25rem;}
+.btn-registrar:hover:not(:disabled){background:var(--magenta-dk);}
+.btn-registrar:disabled{opacity:0.35;cursor:default;}
+
+.msg{border-radius:8px;padding:11px 14px;font-size:13px;margin-top:0.75rem;display:none;}
+.msg.ok{background:var(--green-bg);color:var(--green);border:1px solid rgba(44,95,63,0.2);display:block;}
+.msg.err{background:var(--red-bg);color:var(--magenta-dk);border:1px solid rgba(192,0,106,0.15);display:block;}
+
+/* Lista de ponentes */
+.ponentes-lista{margin-top:0;}
+.ponente-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.ponente-item:last-child{border-bottom:none;}
+.pi-firma{width:52px;height:28px;object-fit:contain;border:1px solid var(--border);border-radius:4px;padding:3px;background:#fff;flex-shrink:0;}
+.pi-firma-empty{width:52px;height:28px;background:var(--surface);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.pi-firma-empty span{font-size:16px;}
+.pi-info{flex:1;min-width:0;}
+.pi-nombre{font-size:14px;font-weight:500;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pi-id{font-family:monospace;font-size:10px;color:var(--muted);margin-top:1px;}
+.pi-actions{display:flex;gap:6px;flex-shrink:0;}
+.btn-small{font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid var(--border);background:transparent;color:var(--mid);transition:all 0.12s;}
+.btn-small:hover{background:var(--surface);}
+.btn-small.del{color:var(--magenta);border-color:rgba(192,0,106,0.2);}
+.btn-small.del:hover{background:var(--red-bg);}
+
+.empty-state{text-align:center;padding:2rem 0;color:var(--muted);font-size:13px;}
+.empty-state span{font-size:32px;display:block;margin-bottom:0.5rem;}
+
+/* Loading */
+.loading{text-align:center;padding:1.5rem;color:var(--muted);font-size:13px;font-style:italic;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="app-header">
+    <p class="eyebrow">SMCI · Sistema de Constancias</p>
+    <h1>Registro de <em>Ponentes</em></h1>
+    <p>Administra los ponentes de SMCI y sus firmas para la generación de constancias.</p>
+    <p style="margin-top:0.75rem;">
+      <a href="index.html" style="font-size:12px;color:var(--magenta);text-decoration:none;font-weight:500;">← Volver al examen</a>
+    </p>
+  </div>
+
+  <!-- FORMULARIO -->
+  <div class="card">
+    <div class="card-title">Agregar ponente</div>
+
+    <div class="field">
+      <label>Nombre completo del ponente</label>
+      <input type="text" id="inp-nombre" placeholder="Ej. Verónica Martínez López" oninput="checkForm()">
+    </div>
+
+    <div class="field">
+      <label>Firma (imagen JPG, PNG o GIF)</label>
+      <div class="firma-zone" id="firma-zone">
+        <input type="file" id="inp-firma" accept="image/*" onchange="previewFirma(this)">
+        <span class="fz-icon">✍️</span>
+        <div class="fz-text">Toca para subir la imagen de la firma</div>
+        <div class="fz-hint">JPG, PNG · Fondo blanco recomendado</div>
+      </div>
+      <div class="firma-preview" id="firma-preview">
+        <img id="firma-img-preview" src="" alt="Firma">
+        <div class="fp-label">✓ Firma cargada</div>
+        <span class="fp-change" onclick="cambiarFirma()">Cambiar firma</span>
+      </div>
+    </div>
+
+    <button class="btn-registrar" id="btn-registrar" disabled onclick="registrarPonente()">
+      Registrar ponente
+    </button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <!-- LISTA -->
+  <div class="card">
+    <div class="card-title">Ponentes registrados</div>
+    <div id="lista-ponentes"><div class="loading">Cargando...</div></div>
+  </div>
+
+</div>
+
+<script>
+var firmaBase64 = null;
+
+// ── PREVIEW FIRMA ──
+function previewFirma(input){
+  if(!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  var reader = new FileReader();
+  reader.onload = function(e){
+    firmaBase64 = e.target.result; // data:image/...;base64,...
+    document.getElementById('firma-img-preview').src = firmaBase64;
+    document.getElementById('firma-preview').style.display = 'block';
+    document.getElementById('firma-zone').style.display = 'none';
+    checkForm();
+  };
+  reader.readAsDataURL(file);
+}
+
+function cambiarFirma(){
+  firmaBase64 = null;
+  document.getElementById('firma-preview').style.display = 'none';
+  document.getElementById('firma-zone').style.display = 'block';
+  document.getElementById('inp-firma').value = '';
+  checkForm();
+}
+
+function checkForm(){
+  var nombre = document.getElementById('inp-nombre').value.trim();
+  document.getElementById('btn-registrar').disabled = !(nombre.length >= 3 && firmaBase64);
+}
+
+// ── REGISTRAR ──
+function registrarPonente(){
+  var nombre = document.getElementById('inp-nombre').value.trim();
+  if(!nombre || !firmaBase64){ return; }
+
+  document.getElementById('btn-registrar').disabled = true;
+  document.getElementById('btn-registrar').textContent = 'Guardando...';
+
+  try {
+    // Generar ID único para el ponente
+    var ts = Date.now().toString(36).toUpperCase();
+    var id = 'PON-' + nombre.replace(/\s+/g,'').toUpperCase().substring(0,4) +
+             '-' + ts.substring(ts.length-5);
+
+    // Cargar lista actual
+    var lista = cargarLista();
+
+    // Verificar duplicado por nombre
+    var existe = lista.find(function(p){ return p.nombre.toLowerCase() === nombre.toLowerCase(); });
+    if(existe){
+      mostrarMsg('Ya existe un ponente registrado con ese nombre.', 'err');
+      document.getElementById('btn-registrar').disabled = false;
+      document.getElementById('btn-registrar').textContent = 'Registrar ponente';
+      return;
+    }
+
+    // Agregar nuevo ponente
+    var nuevoPonente = { id: id, nombre: nombre, firma: firmaBase64, fecha: new Date().toISOString() };
+    lista.push(nuevoPonente);
+
+    // Guardar en localStorage
+    localStorage.setItem('smci_ponentes', JSON.stringify(lista));
+
+    mostrarMsg('Ponente registrado. ID: ' + id, 'ok');
+
+    // Limpiar formulario
+    document.getElementById('inp-nombre').value = '';
+    cambiarFirma();
+    document.getElementById('btn-registrar').disabled = false;
+    document.getElementById('btn-registrar').textContent = 'Registrar ponente';
+
+    // Recargar lista
+    renderLista(lista);
+
+  } catch(e) {
+    console.error(e);
+    mostrarMsg('Error al guardar. Intenta de nuevo.', 'err');
+    document.getElementById('btn-registrar').disabled = false;
+    document.getElementById('btn-registrar').textContent = 'Registrar ponente';
+  }
+}
+
+// ── CARGAR LISTA ──
+function cargarLista(){
+  try {
+    var data = localStorage.getItem('smci_ponentes');
+    if(data) return JSON.parse(data);
+  } catch(e){ }
+  return [];
+}
+
+// ── RENDER LISTA ──
+function renderLista(lista){
+  var el = document.getElementById('lista-ponentes');
+  if(!lista || lista.length === 0){
+    el.innerHTML = '<div class="empty-state"><span>👤</span>Aún no hay ponentes registrados.</div>';
+    return;
+  }
+
+  var html = '';
+  lista.forEach(function(p, i){
+    html += '<div class="ponente-item">';
+    if(p.firma){
+      html += '<img class="pi-firma" src="' + p.firma + '" alt="Firma">';
+    } else {
+      html += '<div class="pi-firma-empty"><span>✍️</span></div>';
+    }
+    html += '<div class="pi-info">';
+    html += '<div class="pi-nombre">' + p.nombre + '</div>';
+    html += '<div class="pi-id">' + p.id + '</div>';
+    html += '</div>';
+    html += '<div class="pi-actions">';
+    html += '<button class="btn-small del" onclick="eliminarPonente(\'' + p.id + '\')">Eliminar</button>';
+    html += '</div>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// ── ELIMINAR ──
+function eliminarPonente(id){
+  if(!confirm('¿Eliminar este ponente? Esta acción no se puede deshacer.')) return;
+  try {
+    var lista = cargarLista();
+    lista = lista.filter(function(p){ return p.id !== id; });
+    localStorage.setItem('smci_ponentes', JSON.stringify(lista));
+    renderLista(lista);
+    mostrarMsg('Ponente eliminado.', 'ok');
+  } catch(e){
+    mostrarMsg('Error al eliminar.', 'err');
+  }
+}
+
+// ── MSG ──
+function mostrarMsg(texto, tipo){
+  var el = document.getElementById('msg');
+  el.textContent = texto;
+  el.className = 'msg ' + tipo;
+  setTimeout(function(){ el.className = 'msg'; }, 5000);
+}
+
+// ── INIT ──
+(function(){
+  var lista = cargarLista();
+  renderLista(lista);
+})();
+</script>
+</body>
+</html>

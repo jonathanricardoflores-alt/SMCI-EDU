@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluación · El Derrocamiento del Nombre del Padre · SMCI</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F5F0E8;--dark:#1A1712;--mid:#3D3830;--muted:#8C8070;
+  --accent:#8B2E2E;--surface:#EFEAD8;--border:rgba(60,50,35,0.15);
+  --green:#2C5F3F;--green-bg:#E8F2EC;--red-bg:#F5E8E8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;}
+
+/* ── PANTALLA REGISTRO ── */
+.screen{display:none;}
+.screen.active{display:block;}
+
+.reg-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+.reg-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:440px;text-align:center;}
+.reg-eyebrow{font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:1.25rem;}
+.reg-card h1{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:400;line-height:1.2;margin-bottom:0.3rem;}
+.reg-card h1 em{font-style:italic;color:var(--accent);}
+.reg-card p{font-size:13px;color:var(--muted);font-weight:300;margin-bottom:2rem;line-height:1.6;}
+.reg-divider{width:36px;height:1px;background:var(--accent);margin:1.25rem auto;}
+.field{text-align:left;margin-bottom:1rem;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px;}
+.field input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--dark);background:#FAFAF8;font-family:'DM Sans',sans-serif;}
+.field input:focus{outline:none;border-color:var(--mid);}
+.btn-start{width:100%;padding:12px;background:var(--dark);color:var(--cream);border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:0.5rem;transition:opacity 0.15s;}
+.btn-start:disabled{opacity:0.35;cursor:default;}
+.btn-start:not(:disabled):hover{opacity:0.85;}
+.field select:focus{outline:none;border-color:var(--magenta);}
+.ponente-cargando{font-size:12px;color:var(--muted);text-align:center;padding:0.5rem 0;}
+
+/* ── HEADER EXAMEN ── */
+.exam-header{background:var(--dark);color:var(--cream);padding:1.5rem 2rem;text-align:center;}
+.exam-header .eyebrow{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;}
+.exam-header h2{font-family:'Playfair Display',serif;font-size:clamp(1.2rem,3vw,1.8rem);font-weight:400;}
+.exam-header h2 em{font-style:italic;color:#C8A882;}
+.exam-participant{font-size:11px;color:rgba(245,240,232,0.5);margin-top:0.4rem;}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:1;min-width:90px;padding:0.85rem 0.5rem;font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;text-align:center;line-height:1.3;transition:all 0.2s;}
+.tab .tab-num{display:block;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.6;margin-bottom:2px;}
+.tab.active{color:var(--accent);border-bottom:2px solid var(--accent);background:var(--cream);}
+.tab.done .tab-num::after{content:' ✓';}
+
+/* ── CONTENIDO ── */
+.exam-main{max-width:700px;margin:0 auto;padding:2rem 1.25rem 4rem;}
+
+.session-panel{display:none;}
+.session-panel.active{display:block;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.session-intro{margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);}
+.session-intro .s-num{font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;}
+.session-intro h3{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:400;margin-bottom:0.3rem;}
+.session-intro p{font-size:13px;color:var(--muted);font-weight:300;}
+
+/* ── PROGRESO ── */
+.prog{margin-bottom:1.5rem;}
+.prog-row{display:flex;justify-content:space-between;margin-bottom:5px;}
+.prog-row span{font-size:11px;color:var(--muted);}
+.prog-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--accent);transition:width 0.4s ease;border-radius:2px;}
+
+/* ── PREGUNTA ── */
+.q-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+.q-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+.q-text{font-family:'Playfair Display',serif;font-size:1rem;line-height:1.55;color:var(--dark);margin-bottom:1.1rem;}
+.opts{display:flex;flex-direction:column;gap:7px;}
+.opt{border:1px solid var(--border);border-radius:8px;padding:10px 13px;cursor:pointer;font-size:13.5px;color:var(--mid);background:#FAFAF8;text-align:left;line-height:1.4;transition:all 0.12s;}
+.opt:hover:not(:disabled){background:var(--surface);border-color:rgba(60,50,35,0.3);}
+.opt.sel{background:var(--surface);border-color:var(--dark);}
+.opt.correct{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+.opt.wrong{background:var(--red-bg);border-color:var(--accent);color:var(--accent);}
+.opt:disabled{cursor:default;}
+.fb{border-radius:8px;padding:11px 14px;margin-top:10px;font-size:13px;line-height:1.6;}
+.fb-ok{background:var(--green-bg);color:#1E4A2E;border:1px solid rgba(44,95,63,0.2);}
+.fb-err{background:var(--red-bg);color:#6B1F1F;border:1px solid rgba(139,46,46,0.15);}
+.fb-open{background:var(--surface);color:var(--mid);border:1px solid var(--border);}
+
+/* ── ABIERTA ── */
+.open-area{width:100%;min-height:90px;border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-size:13.5px;color:var(--dark);background:#FAFAF8;resize:vertical;font-family:'DM Sans',sans-serif;line-height:1.6;}
+.open-area:focus{outline:none;border-color:var(--mid);}
+
+/* ── NAVEGACIÓN ── */
+.nav{display:flex;justify-content:space-between;margin-top:0.75rem;gap:8px;}
+.btn{border:1px solid var(--border);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--mid);font-family:'DM Sans',sans-serif;transition:all 0.12s;}
+.btn:hover:not(:disabled){background:var(--surface);}
+.btn-p{background:var(--dark);color:var(--cream);border-color:var(--dark);}
+.btn-p:hover:not(:disabled){opacity:0.85;}
+.btn:disabled{opacity:0.35;cursor:default;}
+
+/* ── RESULTADO SESIÓN ── */
+.result-card{background:var(--dark);color:var(--cream);border-radius:12px;padding:2rem;text-align:center;margin-top:0.75rem;}
+.result-num{font-family:'Playfair Display',serif;font-size:52px;font-weight:400;}
+.result-den{font-size:18px;opacity:0.45;margin-left:3px;}
+.result-pct{font-size:12px;color:rgba(245,240,232,0.5);margin-top:3px;}
+.result-msg{font-size:13px;color:rgba(245,240,232,0.7);max-width:360px;margin:1rem auto 0;line-height:1.6;font-weight:300;}
+
+/* ── PANTALLA FOLIO ── */
+.folio-wrap{max-width:600px;margin:0 auto;padding:3rem 1.5rem 4rem;text-align:center;}
+.folio-congrats{margin-bottom:2.5rem;}
+.folio-congrats .icon{font-size:48px;margin-bottom:1rem;}
+.folio-congrats h2{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:400;margin-bottom:0.5rem;}
+.folio-congrats h2 em{font-style:italic;color:var(--accent);}
+.folio-congrats p{font-size:15px;color:var(--mid);line-height:1.7;max-width:420px;margin:0 auto;}
+
+.folio-card{background:#fff;border:2px solid var(--border);border-radius:16px;padding:2rem 2rem 1.75rem;text-align:left;margin-bottom:1.5rem;}
+.folio-card .fc-header{text-align:center;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);}
+.folio-card .fc-eyebrow{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;}
+.folio-card .fc-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:400;color:var(--dark);}
+.folio-card .fc-subtitle{font-size:12px;color:var(--muted);margin-top:0.2rem;}
+
+.folio-row{display:flex;justify-content:space-between;align-items:baseline;padding:0.6rem 0;border-bottom:1px solid var(--border);}
+.folio-row:last-child{border-bottom:none;}
+.folio-row .fr-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);min-width:110px;}
+.folio-row .fr-value{font-size:14px;color:var(--dark);text-align:right;font-weight:400;}
+.folio-row .fr-value.name{font-family:'Playfair Display',serif;font-size:15px;font-style:italic;}
+
+.folio-number{background:var(--dark);color:var(--cream);border-radius:10px;padding:1.25rem 1.5rem;margin-top:1.25rem;text-align:center;}
+.folio-number .fn-label{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(245,240,232,0.4);margin-bottom:0.4rem;}
+.folio-number .fn-code{font-family:monospace;font-size:16px;font-weight:700;letter-spacing:0.12em;color:var(--cream);}
+.folio-number .fn-hash{font-size:10px;color:rgba(245,240,232,0.3);margin-top:0.3rem;font-family:monospace;}
+
+.btn-print{display:inline-block;margin-top:1.25rem;padding:11px 28px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-print:hover{opacity:0.88;}
+
+@media print{
+  .exam-header,.tabs,.exam-main,.folio-congrats .icon{display:none!important;}
+  .folio-wrap{padding:1rem;}
+  .folio-congrats h2,.folio-congrats p{display:block;}
+  .btn-print{display:none!important;}
+}
+@media(max-width:480px){
+  .folio-row{flex-direction:column;gap:2px;}
+  .folio-row .fr-value{text-align:left;}
+  .tab{min-width:72px;font-size:10px;padding:0.7rem 0.3rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ PANTALLA 1: REGISTRO ══ -->
+<div class="screen active" id="s-registro">
+  <div class="reg-wrap">
+    <div class="reg-card">
+      <p class="reg-eyebrow">SMCI · Sociedad Mexicana de Ciencias Interdisciplinarias</p>
+      <h1>El Derrocamiento del<br><em>Nombre del Padre</em></h1>
+      <div class="reg-divider"></div>
+      <p>Ingresa tus datos antes de comenzar. Aparecerán en tu folio de participación.</p>
+      <div class="field">
+        <label>Tu nombre completo</label>
+        <input type="text" id="r-nombre" placeholder="Ej. María González Reyes" oninput="checkReg()">
+      </div>
+      <div class="field">
+        <label>Tipo de programa</label>
+        <select id="r-tipo" onchange="filtrarProgramas()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--dark);background:#FAFAF8;font-family:'DM Sans',sans-serif;">
+          <option value="">Selecciona el tipo...</option>
+          <option value="seminario">Seminario</option>
+          <option value="curso">Curso</option>
+          <option value="taller">Taller</option>
+          <option value="diplomado">Diplomado</option>
+          <option value="certificacion">Certificación</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Nombre del programa</label>
+        <select id="r-curso" onchange="autocompletarPonente()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--dark);background:#FAFAF8;font-family:'DM Sans',sans-serif;">
+          <option value="">Primero selecciona el tipo...</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Ponente</label>
+        <select id="r-ponente" onchange="checkReg()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--dark);background:#FAFAF8;font-family:'DM Sans',sans-serif;">
+          <option value="">Se autocompletará al seleccionar programa</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Fecha de aplicación</label>
+        <input type="date" id="r-fecha" oninput="checkReg()">
+      </div>
+      <button class="btn-start" id="btn-start" disabled onclick="iniciar()">Comenzar evaluación →</button>
+      <p style="margin-top:1rem;font-size:11px;color:var(--muted);">
+        ¿Eres ponente de SMCI? 
+        <a href="admin.html" style="color:var(--magenta);text-decoration:none;font-weight:500;">Panel de administración →</a>
+        &nbsp;·&nbsp;
+        <a href="constancia.html" style="color:var(--accent);text-decoration:none;font-weight:500;">Generar constancia →</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANTALLA 2: EXAMEN ══ -->
+<div class="screen" id="s-examen">
+  <div class="exam-header">
+    <p class="eyebrow">SMCI · Evaluación diferida · 5 sesiones</p>
+    <h2>El Derrocamiento del <em>Nombre del Padre</em></h2>
+    <p class="exam-participant" id="exam-participant"></p>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" id="tab-0" onclick="goSesion(0)"><span class="tab-num">Sesión 1</span>Función paterna</button>
+    <button class="tab" id="tab-1" onclick="goSesion(1)"><span class="tab-num">Sesión 2</span>Evaporación</button>
+    <button class="tab" id="tab-2" onclick="goSesion(2)"><span class="tab-num">Sesión 3</span>El Edipo</button>
+    <button class="tab" id="tab-3" onclick="goSesion(3)"><span class="tab-num">Sesión 4</span>Legado</button>
+    <button class="tab" id="tab-4" onclick="goSesion(4)"><span class="tab-num">Sesión 5</span>Melancolía</button>
+  </div>
+
+  <div class="exam-main">
+    <div class="session-panel active" id="panel-0"><div class="session-intro"><p class="s-num">Sesión 1 de 5</p><h3>El declive del Padre Ley</h3><p>Restaurando la función paterna — Una guía clínica para la era del vacío</p></div><div id="quiz-0"></div></div>
+    <div class="session-panel" id="panel-1"><div class="session-intro"><p class="s-num">Sesión 2 de 5</p><h3>La evaporación del padre en la era hipermoderna</h3><p>Diagnóstico sobre la ley, el deseo y las nuevas orfandades</p></div><div id="quiz-1"></div></div>
+    <div class="session-panel" id="panel-2"><div class="session-intro"><p class="s-num">Sesión 3 de 5</p><h3>El destino del Edipo</h3><p>La evolución de la ley, el deseo y la subjetividad contemporánea</p></div><div id="quiz-2"></div></div>
+    <div class="session-panel" id="panel-3"><div class="session-intro"><p class="s-num">Sesión 4 de 5</p><h3>Espejos y huellas del legado</h3><p>La transmisión del deseo y la memoria en la época hipermoderna</p></div><div id="quiz-3"></div></div>
+    <div class="session-panel" id="panel-4"><div class="session-intro"><p class="s-num">Sesión 5 de 5</p><h3>Melancolía: el dolor de una existencia sin sentido</h3><p>El abismo de la melancolía y el acto del padre como vínculo vital</p></div><div id="quiz-4"></div></div>
+  </div>
+</div>
+
+<!-- ══ PANTALLA 3: FOLIO ══ -->
+<div class="screen" id="s-folio">
+  <div class="folio-wrap">
+    <div class="folio-congrats">
+      <div class="icon">🎓</div>
+      <h2>¡Felicitaciones,<br><em id="folio-nombre-saludo"></em>!</h2>
+      <p>Has completado satisfactoriamente la evaluación del seminario. A continuación encontrarás tu folio de participación con los datos registrados.</p>
+    </div>
+
+    <div class="folio-card">
+      <div class="fc-header">
+        <p class="fc-eyebrow">SMCI · Sociedad Mexicana de Ciencias Interdisciplinarias</p>
+        <p class="fc-title">Folio de participación y evaluación</p>
+        <p class="fc-subtitle">Seminario de formación profesional</p>
+      </div>
+
+      <div class="folio-row">
+        <span class="fr-label">Participante</span>
+        <span class="fr-value name" id="f-nombre"></span>
+      </div>
+      <div class="folio-row">
+        <span class="fr-label">Curso / Seminario</span>
+        <span class="fr-value" id="f-curso"></span>
+      </div>
+      <div class="folio-row">
+        <span class="fr-label">Institución</span>
+        <span class="fr-value">Sociedad Mexicana de Ciencias Interdisciplinarias S.C.</span>
+      </div>
+      <div class="folio-row">
+        <span class="fr-label">Ponente</span>
+        <span class="fr-value" id="f-ponente"></span>
+      </div>
+      <div class="folio-row">
+        <span class="fr-label">Institución</span>
+        <span class="fr-value">Sociedad Mexicana de Ciencias Interdisciplinarias S.C.</span>
+      </div>
+      <div class="folio-row">
+        <span class="fr-label">Fecha</span>
+        <span class="fr-value" id="f-fecha"></span>
+      </div>
+      <div class="folio-row">
+        <span class="fr-label">Evaluación</span>
+        <span class="fr-value" id="f-puntaje"></span>
+      </div>
+
+      <div class="folio-number">
+        <p class="fn-label">Folio de participación</p>
+        <p class="fn-code" id="f-folio"></p>
+        <p class="fn-hash" id="f-hash"></p>
+      </div>
+    </div>
+
+    <button class="btn-print" onclick="window.print()">Guardar / Imprimir folio</button>
+    <p style="margin-top:1.25rem;font-size:13px;color:var(--mid);line-height:1.6;">
+      ¿Quieres tu constancia oficial?<br>
+      <a href="constancia.html" style="color:var(--accent);font-weight:600;text-decoration:none;">
+        Ir al generador de constancias →
+      </a>
+    </p>
+  </div>
+</div>
+
+<script>
+// ── DATOS ──
+var datos = {nombre:'', curso:'', ponente:'', ponenteId:'', fecha:'', fechaLegible:''};
+var PONENTES = [];
+var puntajes = [0,0,0,0,0];
+
+// ── REGISTRO ──
+var PROGRAMAS = [];
+
+function cargarPonentes(){
+  try {
+    var data = localStorage.getItem('smci_ponentes');
+    PONENTES = data ? JSON.parse(data) : [];
+  } catch(e){ PONENTES = []; }
+  try {
+    var data2 = localStorage.getItem('smci_programas');
+    PROGRAMAS = data2 ? JSON.parse(data2) : [];
+  } catch(e){ PROGRAMAS = []; }
+  checkReg();
+}
+
+function filtrarProgramas(){
+  var tipo = document.getElementById('r-tipo').value;
+  var selCurso = document.getElementById('r-curso');
+  var selPonente = document.getElementById('r-ponente');
+
+  if(!tipo){
+    selCurso.innerHTML = '<option value="">Primero selecciona el tipo...</option>';
+    selPonente.innerHTML = '<option value="">Se autocompletará al seleccionar programa</option>';
+    checkReg();
+    return;
+  }
+
+  var filtrados = PROGRAMAS.filter(function(p){ return p.tipo === tipo; });
+  if(filtrados.length === 0){
+    selCurso.innerHTML = '<option value="">No hay programas de este tipo registrados</option>';
+  } else {
+    selCurso.innerHTML = '<option value="">Selecciona el programa...</option>' +
+      filtrados.map(function(p){
+        return '<option value="'+p.id+'">'+p.nombre+'</option>';
+      }).join('');
+  }
+  selPonente.innerHTML = '<option value="">Se autocompletará al seleccionar programa</option>';
+  checkReg();
+}
+
+function autocompletarPonente(){
+  var progId = document.getElementById('r-curso').value;
+  var selPonente = document.getElementById('r-ponente');
+
+  if(!progId){
+    selPonente.innerHTML = '<option value="">Se autocompletará al seleccionar programa</option>';
+    checkReg();
+    return;
+  }
+
+  var prog = PROGRAMAS.find(function(p){ return p.id === progId; });
+  if(!prog){ checkReg(); return; }
+
+  // Autocompletar ponente del programa, pero permitir cambiar
+  var opts = '<option value="">Selecciona ponente...</option>';
+  PONENTES.forEach(function(p){
+    opts += '<option value="'+p.id+'"'+(p.id===prog.ponenteId?' selected':'')+'>'+p.nombre+'</option>';
+  });
+  selPonente.innerHTML = opts;
+  checkReg();
+}
+
+function checkReg(){
+  var n = document.getElementById('r-nombre').value.trim();
+  var tipo = document.getElementById('r-tipo').value;
+  var c = document.getElementById('r-curso').value;
+  var p = document.getElementById('r-ponente').value;
+  var f = document.getElementById('r-fecha').value;
+  document.getElementById('btn-start').disabled = !(n.length >= 3 && tipo && c && p && f);
+}
+
+function iniciar(){
+  var n = document.getElementById('r-nombre').value.trim();
+  var progId = document.getElementById('r-curso').value;
+  var prog = PROGRAMAS.find(function(p){ return p.id === progId; });
+  var c = prog ? prog.nombre : progId;
+  var tipoPrograma = document.getElementById('r-tipo').value;
+  var pId = document.getElementById('r-ponente').value;
+  var pObj = PONENTES.find(function(p){ return p.id === pId; });
+  var raw = document.getElementById('r-fecha').value;
+  var partes = raw.split('-');
+  var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  datos.nombre = n;
+  datos.curso = c;
+  datos.tipo = tipoPrograma || 'curso';
+  datos.fechasPrograma = prog ? prog.fechas : '';
+  datos.ponente = pObj ? pObj.nombre : '';
+  datos.ponenteId = pId;
+  datos.fecha = raw;
+  datos.fechaLegible = parseInt(partes[2]) + ' de ' + meses[parseInt(partes[1])-1] + ' de ' + partes[0];
+
+  document.getElementById('exam-participant').textContent = n + ' · ' + c + ' · ' + datos.ponente;
+  document.getElementById('s-registro').classList.remove('active');
+  document.getElementById('s-examen').classList.add('active');
+
+  SESIONES.forEach(function(_,i){ renderSesion(i); });
+}
+
+// Fecha de hoy por defecto
+document.getElementById('r-fecha').value = new Date().toISOString().split('T')[0];
+// Cargar ponentes desde localStorage
+cargarPonentes();
+
+// ── CONTENIDO ──
+var SESIONES = [
+  { titulo:'Sesión 1',
+    qs:[
+      {type:'mc', q:'Para Recalcati, ¿cuál es el rasgo constitutivo de la época hipermoderna en relación con la paternidad?',
+       opts:['El retorno del padre autoritario y disciplinario','El surgimiento de nuevas formas de autoridad horizontal','La evaporación del padre como rasgo dominante de nuestro tiempo','La sustitución del padre biológico por el padre simbólico'],
+       c:2, ok:'Correcto. Recalcati identifica la evaporación del padre —dominada por el discurso capitalista y la aniquilación de la trascendencia— como el rasgo constitutivo de nuestra época.',
+       err:'No exactamente. Recalcati argumenta que la característica definitoria de la hipermodernidad es la evaporación del padre: su ausencia estructural.'},
+      {type:'mc', q:'¿Cuál es la diferencia fundamental entre el "padre real" y el "padre simbólico"?',
+       opts:['El padre real ejerce autoridad física y el padre simbólico ejerce autoridad verbal','El padre real puede estar presente o ausente; el padre simbólico es la función, la ley y la inscripción de una genealogía','El padre real es biológico y el padre simbólico es adoptivo','El padre real corresponde al Edipo freudiano y el padre simbólico al Edipo lacaniano'],
+       c:1, ok:'Exacto. El padre simbólico no es la biología: es la inscripción de una genealogía, la internalización de los límites y la función estructural.',
+       err:'El padre real es la persona concreta; el padre simbólico es la función, la ley, el lugar, independientemente de la presencia física.'},
+      {type:'mc', q:'En el nudo de la transmisión, ¿qué consecuencia tiene la ley sin deseo y el deseo sin ley?',
+       opts:['Ambos extremos producen forclusión del Nombre del Padre','Ley sin deseo produce el padre edípico; deseo sin ley el padre evaporado','Ley sin deseo produce neurosis clásica; deseo sin ley produce psicosis','Ley sin deseo produce opresión y desprecio por la vida; deseo sin ley produce goce autista y empuje a la muerte'],
+       c:3, ok:'Muy bien. Sin ley el deseo se extravía en el goce mortífero; sin deseo la ley se vuelve opresión pura. El padre testimonio encarna la intersección.',
+       err:'Ley sin deseo produce opresión y desprecio por la vida; deseo sin ley produce goce autista y empuje a la muerte.'},
+      {type:'mc', q:'¿Cuál es la diferencia entre la "clínica de la falta" y la "clínica del vacío"?',
+       opts:['En la falta el síntoma es un mensaje cifrado conectado al Otro; en el vacío hay goce autista y angustia del vacío innombrable','Son dos nombres para el mismo fenómeno clínico','La falta opera con represión; el vacío opera con forclusión en todos los casos','La clínica de la falta es freudiana y la del vacío es lacaniana'],
+       c:0, ok:'Correcto. En la falta el síntoma es formación de compromiso, mensaje al Otro. En el vacío, el síntoma es práctica acéfala que excluye al Otro.',
+       err:'La diferencia es clínica: en la neurosis clásica el síntoma tiene sentido referido al Otro; en la clínica del vacío opera por ausencia de límite.'},
+      {type:'open', q:'En la sesión se presentaron tres escenas clínicas: un joven de 28 años con vacío existencial que consulta a ChatGPT, un adolescente de 15 con apatía total, y un padre de 45 paralizado por su historia. ¿Qué tienen en común estas tres escenas desde la perspectiva de la crisis de la función paterna?',
+       ph:'Desarrolla en no más de tres párrafos...',
+       fb:'Las tres escenas comparten un denominador estructural: la ausencia de la función paterna como instancia que orienta el deseo y sostiene el límite. Lo que falta en los tres casos no es información ni afecto, sino un testigo que encarne la alianza entre Ley y Deseo. La clínica contemporánea exige leer este vacío no como patología individual sino como efecto de época: el sujeto hipermoderno no carece de estímulos, carece de horizonte simbólico.'}
+    ]
+  },
+  { titulo:'Sesión 2',
+    qs:[
+      {type:'mc', q:'¿Qué distingue al "deseo sano" del "goce patológico" según el marco clínico del seminario?',
+       opts:['El deseo sano proviene del Superyó; el goce patológico de la pulsión de muerte','El deseo sano corresponde a la neurosis clásica; el goce patológico a la psicosis','El deseo sano es consciente; el goce patológico es inconsciente','El deseo sano busca un objeto, tiene un límite y opera bajo coordenadas sociales; el goce es ilimitado, solitario y autodestructivo'],
+       c:3, ok:'Correcto. El deseo asume la falta y se orienta hacia el Otro; el goce cortocircuita esa mediación y se vuelve autorreferencial, mortífero.',
+       err:'La distinción es económica: el deseo opera con la falta como motor; el goce busca eliminar la falta, con resultados destructivos.'},
+      {type:'mc', q:'Panel A / Panel B: ¿qué ocurre con el deseo cuando no existe muro de prohibición?',
+       opts:['La falta moviliza al sujeto: sin el muro de la prohibición, el deseo se ahoga en la pulsión y aparece la angustia','Sin muro, el deseo se libera y el sujeto alcanza mayor autonomía','El muro de la prohibición es una construcción arbitraria que puede eliminarse sin consecuencias','Con muro el deseo se reprime; sin muro el deseo fluye naturalmente'],
+       c:0, ok:'Exacto. El límite no es el enemigo del deseo: es su condición de posibilidad. Sin el "No" que estructura, el deseo se disuelve en compulsión y angustia.',
+       err:'La ilusión que el seminario desmonta es equiparar prohibición con represión y ausencia de límite con libertad. Sin muro, el deseo degenera en pulsión desbocada.'},
+      {type:'mc', q:'¿Cuál es la característica definitoria del "Padre Testimonio" como tercera vía?',
+       opts:['Es el padre biológico que recupera su lugar tras el divorcio','Renuncia completamente a la autoridad para favorecer la autonomía del hijo','Encarna la alianza entre Ley y Deseo: dona la facultad de desear mostrando que la existencia tiene sentido dentro de un límite','Ejerce autoridad desde la omnipotencia pero con empatía'],
+       c:2, ok:'Preciso. El Padre Testimonio humaniza la falta al testimoniar con su propia existencia que la vida con límites merece ser vivida.',
+       err:'El Padre Testimonio encarna la alianza Ley-Deseo: no tiene todas las respuestas, sino que asume la responsabilidad de su propio deseo, aun sin certezas.'},
+      {type:'mc', q:'¿Qué papel cumplen TikTok, influencers y la IA frente a la necesidad de orientación del sujeto contemporáneo?',
+       opts:['Son expresiones del Padre Evaporado que eventualmente serán reemplazadas','Representan una evolución positiva del Padre Simbólico en la era digital','Ofrecen sucedáneos de orientación: respuestas sin vínculo y saber sin deseo, que sustituyen la función paterna sin encarnarla','Son herramientas neutras que el sujeto puede usar según su criterio'],
+       c:2, ok:'Correcto. TikTok es el espejo narcisista; los influencers son padres impostores; la IA es el padre perfecto sin cuerpo ni exigencia ética. Sucedáneos que no transmiten deseo.',
+       err:'No son neutras ni representan una evolución del padre simbólico. Dan respuestas sin vínculo, saber sin deseo.'},
+      {type:'open', q:'El seminario propone que el sujeto contemporáneo se asemeja a Telémaco: no combate al padre sino que aguarda su regreso. ¿Cómo se articula esta figura con lo que observas en tu práctica clínica o contexto profesional?',
+       ph:'Desarrolla brevemente...',
+       fb:'La figura de Telémaco ilumina algo central en la clínica actual: el sujeto no se rebela contra la autoridad, la invoca. Lo que en otra época fue el conflicto edípico hoy se presenta como orfandad activa, una espera que no siempre sabe que es espera. En la práctica esto aparece como pacientes que piden que les digas qué hacer, o que abandonan el proceso cuando el terapeuta no ocupa el lugar del Amo. El reto clínico es sostener la pregunta sin responderla, testimoniar sin dictar.'}
+    ]
+  },
+  { titulo:'Sesión 3',
+    qs:[
+      {type:'mc', q:'¿Cuál es el giro fundamental que introduce Lacan respecto al drama edípico freudiano?',
+       opts:['Lacan desbiologiza el drama: el padre no es la persona de carne y hueso sino una función simbólica estructural que opera en el reino del lenguaje','Lacan refuerza la centralidad del padre biológico como garante del orden psíquico','Lacan reemplaza el concepto de castración por el de separación','Lacan elimina la figura del padre y la sustituye por la función materna'],
+       c:0, ok:'Correcto. La tragedia no radica en la anatomía física ni en el padre biológico real, sino en el orden simbólico. El Padre opera como función simbólica estructural.',
+       err:'El movimiento de Lacan es alejarse de la biología. El padre se convierte en función simbólica: lo que importa es que la función opere en el lenguaje.'},
+      {type:'mc', q:'¿Qué describe el sepultamiento del complejo de Edipo?',
+       opts:['La resolución terapéutica del conflicto padre-hijo mediante el diálogo','Un simple olvido de los conflictos edípicos mediante la represión ordinaria','Una destrucción estructural: ante la angustia de castración, el yo renuncia a la investidura libidinosa, se internaliza la autoridad paterna erigiendo el Superyó','Un proceso gradual de comprensión consciente de los deseos incestuosos'],
+       c:2, ok:'Preciso. El sepultamiento no es olvido, es destrucción estructural. Se erige el Superyó y se desexualiza la libido, fundando la posibilidad de la vida cultural.',
+       err:'No es un proceso gradual ni consciente. Es destrucción estructural: bajo la angustia de castración, el yo abandona la investidura libidinosa y la autoridad queda internalizada.'},
+      {type:'mc', q:'¿Cuál caracteriza específicamente al Hijo Telémaco de la hipermodernidad?',
+       opts:['Aspira a la abolición total de la Ley buscando la potencia ilimitada','Ignora la Ley y vive en una horizontalidad especular sin tolerancia a la frustración','Vive en conflicto permanente con la figura paterna buscando transgredir la Ley','Vive en orfandad: no combate al padre sino que invoca la Ley, aguardando un testimonio que le devuelva el horizonte'],
+       c:3, ok:'Exacto. Telémaco es el huérfano que aguarda. No transgrede porque no tiene a quién transgredir. Invoca la Ley y demanda un testimonio vivo.',
+       err:'La posición de Telémaco es la de la orfandad: el hijo hipermoderno no tiene padre contra quien rebelarse; aguarda e invoca.'},
+      {type:'mc', q:'¿Cuál de los siguientes pares captura correctamente una diferencia entre sociedad del deber y sociedad del goce?',
+       opts:['Ayer: dinámica de satisfacción inmediata / Hoy: dinámica de postergación del placer','Ayer: clínica de la neurosis por conflicto interno / Hoy: clínica del vacío, depresión y adicción','Ayer: regulador social es la vergüenza / Hoy: regulador social es la culpa','Ayer: autoridad horizontal / Hoy: autoridad vertical'],
+       c:1, ok:'Correcto. Donde antes el conflicto interno (neurosis) era la forma dominante, hoy el vacío, la depresión sin objeto y la adicción son la presentación característica.',
+       err:'Los pares están invertidos. Ayer operaba la culpa y la neurosis; hoy opera la vergüenza por no gozar suficiente y la clínica se expresa como vacío, depresión y adicción.'},
+      {type:'open', q:'El seminario propone que el Complejo de Edipo trasciende la anécdota biológica y es "la brújula de nuestra inserción en la cultura". ¿Qué implicaciones tiene esto para entender los síntomas contemporáneos que observas en tu trabajo?',
+       ph:'Desarrolla en no más de tres párrafos...',
+       fb:'El Edipo como brújula cultural permite leer los síntomas contemporáneos no como patologías aisladas sino como formas históricas de resolver la inserción en la cultura. La adicción, el vínculo líquido, la apatía y la búsqueda infinita en pantallas son las formas que toma el deseo cuando no ha sido estructurado por la castración simbólica. Esta lectura tiene implicaciones directas: no se trata de adaptar al sujeto sino de restituirle la pregunta por su deseo.'}
+    ]
+  },
+  { titulo:'Sesión 4',
+    qs:[
+      {type:'mc', q:'Según Goyes, ¿qué es el "punto de ignición" en un texto fílmico autobiográfico como "El espejo" de Tarkovski?',
+       opts:['El punto de vista subjetivo del narrador desde el que se organiza el relato','La primera imagen del filme que orienta toda la lectura posterior','El momento de mayor tensión dramática de la película','La materia real del autor insertada en el texto: el elemento autobiográfico que actúa como núcleo incandescente que da vida al símbolo cinematográfico'],
+       c:3, ok:'Correcto. El punto de ignición es lo autobiográfico como materia real insertada en el texto, núcleo vivo que electrifica el símbolo. En Tarkovski: la voz en off real del padre leyendo sus poemas.',
+       err:'El punto de ignición no es narrativo sino textual-autobiográfico: es la materia real del autor que se cuela en el texto y lo enciende desde adentro.'},
+      {type:'mc', q:'¿Cómo describen Goyes y Recalcati el mecanismo de transmisión del legado?',
+       opts:['La existencia se transmite mediante la narración explícita de la historia familiar','La existencia se hereda biológicamente a través de los genes','La existencia no se hereda biológicamente; se inscribe simbólicamente a través de una cicatriz en el texto humano','La existencia se transmite únicamente a través de las grandes obras culturales'],
+       c:2, ok:'Exacto. Tanto el cine como el psicoanálisis revelan que la existencia no se hereda biológicamente sino que se inscribe simbólicamente, como una cicatriz, una huella, un resto.',
+       err:'La transmisión no pasa por la biología ni por la narración explícita. Se realiza simbólicamente, como una cicatriz en el texto humano: un gesto, una voz, un objeto.'},
+      {type:'mc', q:'¿Cuál describe correctamente el Nodo 2 del "ciclo infinito: la mirada espejeante"?',
+       opts:['Cierre definitivo del significado al final del filme','El Gozne / El Espejo: reflexión genealógica entre pasado (memoria) y futuro (promesa)','Los tres nodos describen etapas de la trama narrativa clásica','Asociación cronológica de imágenes según el orden temporal de los hechos'],
+       c:1, ok:'Correcto. El Nodo 2 es la bisagra genealógica que articula memoria y promesa. El significado nunca se cierra, se prolonga indefinidamente.',
+       err:'Las imágenes en Tarkovski surgen por conexión emocional, no cronológica. El Nodo 2 es el gozne genealógico entre memoria y promesa.'},
+      {type:'mc', q:'¿Qué significa la "transmisión sobre el resto" como tesis final del seminario?',
+       opts:['La transmisión depende de la calidad de la relación consciente entre padre e hijo','La transmisión se realiza principalmente a través de las grandes obras y logros del padre','El resto es lo que queda de la relación después de la muerte del padre','El legado verdadero no pasa por las grandes obras sino por el resto: el gesto cotidiano, el objeto de memoria, el acto singular que demuestra que la vida merece ser vivida'],
+       c:3, ok:'Exacto. La transmisión no se da por las grandes obras sino sobre el resto: el cuenco de afeitar de Philip Roth, la voz de Tarkovski padre, el acto de amor en el ring de Eastwood.',
+       err:'La paradoja es que la transmisión más profunda pasa por el resto: lo pequeño, lo cotidiano, el gesto singular. La cicatriz, no el monumento.'},
+      {type:'open', q:'El seminario articuló cine y psicoanálisis para responder: ¿cómo transmitimos una existencia con sentido a la siguiente generación? Desde tu posición como profesional de la salud mental, ¿qué lugar ocupa el terapeuta en esta transmisión?',
+       ph:'Desarrolla en no más de tres párrafos...',
+       fb:'El terapeuta ocupa una posición análoga a la del padre testimonio, pero transitoria por definición. Su función no es ser el padre que el paciente no tuvo, sino encarnar temporalmente la asimetría que permite al sujeto encontrar su propio deseo. Lo que transmite no son técnicas sino una demostración en acto de que es posible sostener la falta sin aniquilarse en ella. La tentación narcisista de ser el padre perfecto es precisamente la trampa que el terapeuta debe evitar.'}
+    ]
+  },
+  { titulo:'Sesión 5',
+    qs:[
+      {type:'mc', q:'La melancolía es descrita como "la vida que rechaza a la vida". ¿Qué paradoja estructural expresa esta frase?',
+       opts:['La melancolía es una forma de resistencia ante el mandato social del goce','El melancólico rechaza el deseo del Otro pero mantiene intacto su propio deseo','El sujeto sufre un desprecio y culpa infinitos por el simple hecho de existir: la existencia misma se convierte en fuente de dolor y autoacusación','El sujeto melancólico desea vivir pero carece de energía para hacerlo'],
+       c:2, ok:'Exacto. La paradoja melancólica es que la existencia misma se convierte en causa de culpa infinita. No es que falte algo externo: es la existencia en su totalidad lo que el sujeto rechaza.',
+       err:'La melancolía no es falta de energía ni resistencia al goce. Su paradoja es más radical: el sujeto se acusa y desprecia por el simple hecho de existir.'},
+      {type:'mc', q:'¿Cuál es la diferencia central entre la melancolía clásica y la neo-melancolía?',
+       opts:['La melancolía clásica se manifiesta como autoacusación, autodesprecio y delirio moral; la neo-melancolía aparece como anorexia, adicciones y búsqueda activa del vacío','La melancolía clásica responde al tratamiento farmacológico; la neo-melancolía requiere intervención psicoanalítica','La melancolía clásica afecta a adultos mayores; la neo-melancolía afecta principalmente a jóvenes','La melancolía clásica es de origen biológico; la neo-melancolía es de origen psicosocial'],
+       c:0, ok:'Correcto. La distinción es clínica: la forma clásica es el colapso hacia adentro (autoacusación, delirio moral); la neo-melancolía es el movimiento hacia el vaciamiento activo.',
+       err:'La distinción no es por edad ni etiología. Es en la presentación clínica: la forma clásica colapsa hacia adentro; la neo-melancolía busca activamente el vaciamiento.'},
+      {type:'mc', q:'¿Qué función cumple el "Padre como Testigo" frente al abismo melancólico?',
+       opts:['Diagnostica la estructura melancólica y deriva al paciente al tratamiento adecuado','Substituye al Otro simbólico ausente con una presencia afectiva incondicional','Ofrece certezas y respuestas que llenan el vacío existencial','Une la vida con el sentido mediante el deseo y la ley, siendo la función que permite que la existencia esté animada por el deseo en lugar de aplastada por la culpa'],
+       c:3, ok:'Preciso. El Padre como Testigo es el puente entre existencia y sentido. Encarna la alianza Ley-Deseo: muestra que la existencia, con sus límites y su falta, puede ser animada por el deseo.',
+       err:'El Padre como Testigo no llena el vacío ni substituye al Otro. Su función es encarnar la articulación entre Ley y Deseo, demostrando que es posible vivir con sentido dentro del límite.'},
+      {type:'mc', q:'¿Qué condición describe la "inscripción en el deseo del Otro"?',
+       opts:['La inscripción en el deseo del Otro es una fase temprana que se supera en la adultez','El sujeto internaliza el deseo del Otro como Superyó, generando culpa','El sujeto aprende a desear observando el deseo de figuras culturales','Existir psíquicamente requiere ser nombrado y esperado por un Otro simbólico: sin esa inscripción, la existencia carece de anclaje en el deseo'],
+       c:3, ok:'Exacto. Nadie existe psíquicamente sin haber sido nombrado y esperado por un Otro que lo desee. Cuando esa inscripción falla, la existencia pierde su anclaje.',
+       err:'No es una fase superable. La inscripción en el deseo del Otro es condición estructural de la existencia psíquica.'},
+      {type:'open', q:'La neo-melancolía se caracteriza por el "deseo de no desear". ¿Cómo distingues clínicamente este estado del duelo, la depresión mayor o la apatía de la clínica del vacío? ¿Qué orientación terapéutica propone el marco del seminario?',
+       ph:'Desarrolla en no más de tres párrafos...',
+       fb:'El duelo implica un objeto perdido identificable; la depresión mayor puede tener objeto pero opera en el registro del agotamiento vital; la apatía de la clínica del vacío es ausencia de deseo sin angustia manifiesta. La neo-melancolía, en cambio, se caracteriza por el deseo activo de no desear: no es pasividad sino búsqueda del vaciamiento. La orientación terapéutica pasa por restituir la inscripción en el deseo del Otro: hacer posible que el sujeto sea nombrado, esperado, reconocido, y desde ahí recuperar la pregunta por su existencia.'}
+    ]
+  }
+];
+
+// ── ESTADO ──
+var estado = SESIONES.map(function(){ return {cur:0, ans:[], fbs:[], done:false}; });
+var sesionActiva = 0;
+
+// ── NAVEGACIÓN ──
+function goSesion(i){
+  document.querySelectorAll('.session-panel').forEach(function(p,j){ p.classList.toggle('active', j===i); });
+  document.querySelectorAll('.tab').forEach(function(t,j){ t.classList.toggle('active', j===i); });
+  sesionActiva = i;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ── RENDER ──
+function renderSesion(si){
+  var es = estado[si];
+  var qs = SESIONES[si].qs;
+  var q = qs[es.cur];
+  var pct = Math.round((es.cur / qs.length) * 100);
+
+  var html = '<div class="prog"><div class="prog-row"><span>Pregunta ' + (es.cur+1) + ' de ' + qs.length + '</span><span>' + pct + '%</span></div><div class="prog-bar"><div class="prog-fill" style="width:' + pct + '%"></div></div></div>';
+  html += '<div class="q-card"><div class="q-label">Pregunta ' + (es.cur+1) + (q.type==='open' ? ' · Reflexión abierta' : '') + '</div><div class="q-text">' + q.q + '</div>';
+
+  if(q.type === 'mc'){
+    html += '<div class="opts">';
+    q.opts.forEach(function(o, i){
+      var cls = 'opt';
+      var fb = es.fbs[es.cur];
+      if(fb !== undefined){
+        if(i === q.c) cls += ' correct';
+        else if(i === es.ans[es.cur] && es.ans[es.cur] !== q.c) cls += ' wrong';
+      } else if(es.ans[es.cur] === i) cls += ' sel';
+      html += '<button class="' + cls + '" onclick="elegir(' + si + ',' + i + ')" ' + (fb!==undefined?'disabled':'') + '>' + o + '</button>';
+    });
+    html += '</div>';
+    if(es.fbs[es.cur] !== undefined){
+      var ok = es.ans[es.cur] === q.c;
+      html += '<div class="fb ' + (ok?'fb-ok':'fb-err') + '">' + (ok?'✓ ':'✗ ') + (ok?q.ok:q.err) + '</div>';
+    }
+  } else {
+    html += '<textarea class="open-area" id="oa-' + si + '" placeholder="' + q.ph + '" oninput="guardarAbierta(' + si + ')">' + (es.ans[es.cur]||'') + '</textarea>';
+    if(es.fbs[es.cur]){
+      html += '<div class="fb fb-open"><strong>Retroalimentación:</strong><br><br>' + es.fbs[es.cur] + '</div>';
+    }
+  }
+  html += '</div>';
+
+  // Navegación
+  var nav = '<div class="nav"><button class="btn" onclick="anterior(' + si + ')" ' + (es.cur===0?'disabled':'') + '>← Anterior</button>';
+  if(q.type === 'mc'){
+    var fb = es.fbs[es.cur];
+    if(fb === undefined) nav += '<button class="btn btn-p" onclick="confirmarMC(' + si + ')" ' + (es.ans[es.cur]===undefined?'disabled':'') + '>Confirmar</button>';
+    else if(es.cur < qs.length-1) nav += '<button class="btn btn-p" onclick="siguiente(' + si + ')">Siguiente →</button>';
+    else nav += '<button class="btn btn-p" onclick="verResultado(' + si + ')">Ver resultado</button>';
+  } else {
+    if(!es.fbs[es.cur]){
+      var val = es.ans[es.cur] || '';
+      nav += '<button class="btn btn-p" id="btn-open-' + si + '" onclick="confirmarAbierta(' + si + ')" ' + (val.trim().length<20?'disabled':'') + '>Enviar reflexión</button>';
+    } else if(es.cur < qs.length-1){
+      nav += '<button class="btn btn-p" onclick="siguiente(' + si + ')">Siguiente →</button>';
+    } else {
+      nav += '<button class="btn btn-p" onclick="verResultado(' + si + ')">Ver resultado</button>';
+    }
+  }
+  nav += '</div>';
+  document.getElementById('quiz-' + si).innerHTML = html + nav;
+}
+
+function elegir(si, i){
+  var es = estado[si];
+  if(es.fbs[es.cur] !== undefined) return;
+  es.ans[es.cur] = i;
+  renderSesion(si);
+}
+
+function guardarAbierta(si){
+  var es = estado[si];
+  var el = document.getElementById('oa-' + si);
+  if(el) es.ans[es.cur] = el.value;
+  var btn = document.getElementById('btn-open-' + si);
+  if(btn) btn.disabled = !(es.ans[es.cur] && es.ans[es.cur].trim().length >= 20);
+}
+
+function confirmarMC(si){
+  estado[si].fbs[estado[si].cur] = 'done';
+  renderSesion(si);
+}
+
+function confirmarAbierta(si){
+  var es = estado[si];
+  var q = SESIONES[si].qs[es.cur];
+  es.fbs[es.cur] = q.fb;
+  renderSesion(si);
+}
+
+function anterior(si){ var es=estado[si]; if(es.cur>0){es.cur--;renderSesion(si);} }
+function siguiente(si){ var es=estado[si]; es.cur++; renderSesion(si); }
+
+function verResultado(si){
+  var es = estado[si];
+  var qs = SESIONES[si].qs;
+  var correctas = 0;
+  qs.forEach(function(q,i){ if(q.type==='mc' && es.ans[i]===q.c) correctas++; });
+  var total = qs.filter(function(q){ return q.type==='mc'; }).length;
+  var pct = Math.round((correctas/total)*100);
+
+  es.done = true;
+  puntajes[si] = correctas;
+  document.getElementById('tab-' + si).classList.add('done');
+
+  var msg = pct >= 75 ? 'Comprensión sólida de los conceptos de esta sesión.' :
+            pct >= 50 ? 'Comprensión parcial — te recomendamos revisar los conceptos clave.' :
+            'Te sugerimos revisar el material de esta sesión.';
+
+  var todasListas = estado.every(function(e){ return e.done; });
+  var botonSig = '';
+  if(si < 4) botonSig = '<br><button class="btn btn-p" style="margin-top:1rem" onclick="goSesion(' + (si+1) + ')">Ir a sesión ' + (si+2) + ' →</button>';
+  else if(todasListas) botonSig = '<br><button class="btn btn-p" style="margin-top:1rem;background:var(--accent);border-color:var(--accent)" onclick="mostrarFolio()">Ver mi folio de participación →</button>';
+
+  document.getElementById('quiz-' + si).innerHTML =
+    '<div class="result-card">' +
+    '<div class="result-num">' + correctas + '<span class="result-den">/' + total + '</span></div>' +
+    '<div class="result-pct">' + pct + '% · Preguntas de opción múltiple</div>' +
+    '<p class="result-msg">' + msg + '</p>' +
+    botonSig +
+    '</div>';
+}
+
+function mostrarFolio(){
+  // Calcular puntaje total
+  var totalCorrectas = puntajes.reduce(function(a,b){ return a+b; }, 0);
+  var totalPreguntas = 20; // 4 MC por sesión x 5 sesiones
+  var pctTotal = Math.round((totalCorrectas/totalPreguntas)*100);
+
+  // Generar folio único
+  var folioBase = datos.nombre.replace(/\s+/g,'').toUpperCase().substring(0,4);
+  var fechaNum = datos.fecha.replace(/-/g,'');
+  var rand = Math.floor(Math.random()*9000+1000);
+  // Folio incluye ID del ponente para recuperarlo después
+  var folio = 'SMCI-' + folioBase + '-' + fechaNum + '-' + rand;
+  // Guardar datos completos en localStorage vinculados al folio
+  var folioData = {
+    folio: folio,
+    nombre: datos.nombre,
+    curso: datos.curso,
+    tipo: datos.tipo,
+    fechasPrograma: datos.fechasPrograma,
+    ponente: datos.ponente,
+    ponenteId: datos.ponenteId,
+    fecha: datos.fecha,
+    fechaLegible: datos.fechaLegible,
+    puntaje: totalCorrectas,
+    total: totalPreguntas,
+    pct: pctTotal
+  };
+  localStorage.setItem('smci_folio_' + folio, JSON.stringify(folioData));
+
+  // Cadena de verificación
+  var cadena = folio + '|' + datos.nombre + '|' + datos.fecha;
+  var hash = 0;
+  for(var i=0; i<cadena.length; i++){
+    hash = ((hash<<5)-hash) + cadena.charCodeAt(i);
+    hash = hash & hash;
+  }
+  var hashHex = Math.abs(hash).toString(16).toUpperCase().padStart(8,'0');
+  var cadenaVerif = hashHex.substring(0,4) + '-' + hashHex.substring(4,8) + '-' + rand;
+
+  // Llenar pantalla folio
+  var nombreCorto = datos.nombre.split(' ')[0];
+  document.getElementById('folio-nombre-saludo').textContent = nombreCorto;
+  document.getElementById('f-nombre').textContent = datos.nombre;
+  document.getElementById('f-curso').textContent = datos.curso;
+  document.getElementById('f-ponente').textContent = datos.ponente;
+  document.getElementById('f-fecha').textContent = datos.fechaLegible;
+  document.getElementById('f-puntaje').textContent = totalCorrectas + '/20 preguntas correctas (' + pctTotal + '%)';
+  document.getElementById('f-folio').textContent = folio;
+  document.getElementById('f-hash').textContent = 'Verificación: ' + cadenaVerif + ' · SMDCISC-LSPE001';
+
+  // Mostrar pantalla
+  document.getElementById('s-examen').classList.remove('active');
+  document.getElementById('s-folio').classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
